@@ -11,6 +11,20 @@ const navItems = [
   ["/thong-ke", "bar_chart", "Thống kê (KPI)"],
 ];
 
+const mockAccounts = [
+  { id: "commander", username: "chihuy", password: "123456", name: "Nguyễn Văn Chỉ huy", role: "Chỉ huy vận hành", home: "/" },
+  { id: "pilot", username: "phi-cong", password: "123456", name: "Trần Minh Phi công", role: "Phi công UAV", home: "/phi-cong-uav" },
+  { id: "response", username: "phan-ung", password: "123456", name: "Lê Anh Dũng", role: "Đội phản ứng", home: "/doi-phan-ung" },
+  { id: "operator", username: "van-hanh", password: "123456", name: "Phạm Gia Huy", role: "Người vận hành drone", home: "/van-hanh-drone" },
+];
+
+const roleMenus = {
+  commander: [["/", "grid_view", "Trang chủ"], ["/kho-tri-thuc/tong-hop-chien-dich", "menu_book", "Kho tri thức"], ["/bao-cao-aar/gui", "description", "Gửi báo cáo AAR"], ["/duyet-bai", "verified_user", "Duyệt bài"], ["/thong-ke", "bar_chart", "Thống kê (KPI)"]],
+  pilot: [["/phi-cong-uav", "flight", "Nhiệm vụ của tôi"], ["/nhiem-vu", "checklist", "Checklist bay"], ["/bao-cao-aar/gui", "description", "Gửi AAR"], ["/kho-tri-thuc/tong-hop-chien-dich", "menu_book", "SOP được phân công"]],
+  response: [["/doi-phan-ung", "emergency", "Sự cố được giao"], ["/nhiem-vu", "add_task", "Yêu cầu hỗ trợ UAV"], ["/bao-cao-aar/gui", "description", "AAR hiện trường"], ["/kho-tri-thuc/tong-hop-chien-dich", "menu_book", "SOP khẩn cấp"]],
+  operator: [["/van-hanh-drone", "settings_input_component", "Ca vận hành"], ["/nhiem-vu", "battery_charging_full", "Thiết bị & pin"], ["/bao-cao-aar/gui", "description", "AAR kỹ thuật"], ["/kho-tri-thuc/tong-hop-chien-dich", "menu_book", "SOP kỹ thuật"]],
+};
+
 const screenInfo = {
   "/dieu-hanh": ["Trung tâm điều hành", "Theo dõi nhiệm vụ và trạng thái đội bay theo thời gian thực."],
   "/kho-tri-thuc/tong-hop-chien-dich": ["Tổng hợp tri thức chiến dịch", "Các bài học, SOP và dữ liệu đã được xác thực từ nhiệm vụ UAV."],
@@ -27,41 +41,42 @@ function Icon({ children }) {
   return <span className="material-symbols-outlined" aria-hidden="true">{children}</span>;
 }
 
-function Profile({ onLogout }) {
+function Profile({ onLogout, account = mockAccounts[0] }) {
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState(false);
 
   return <>
     <button className="avatar-button" onClick={() => setOpen(!open)} aria-label="Mở menu tài khoản">
-      <span className="avatar">CH</span>
+      <span className="avatar">{account.id === "commander" ? "CH" : account.id === "pilot" ? "PC" : account.id === "response" ? "PU" : "VD"}</span>
     </button>
     {open && <div className="profile-popover">
-      <div className="profile-summary"><strong>Nguyễn Văn Chỉ huy</strong><span>Chỉ huy vận hành</span></div>
+      <div className="profile-summary"><strong>{account.name}</strong><span>{account.role}</span></div>
       <button onClick={() => { setOpen(false); setDetail(true); }}><Icon>person</Icon>Xem chi tiết hồ sơ</button>
       <button className="danger" onClick={onLogout}><Icon>logout</Icon>Đăng xuất vai trò này</button>
     </div>}
     {detail && <div className="modal-backdrop" onMouseDown={() => setDetail(false)}>
       <section className="profile-modal" onMouseDown={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal-header"><div><h2>Chi tiết hồ sơ</h2><p>Thông tin tài khoản đang sử dụng</p></div><button onClick={() => setDetail(false)} aria-label="Đóng"><Icon>close</Icon></button></div>
-        <div className="profile-identity"><span className="avatar large">CH</span><div><strong>Nguyễn Văn Chỉ huy</strong><p>Chỉ huy vận hành</p></div></div>
-        <dl className="profile-data"><div><dt>Mã cán bộ</dt><dd>UAV-CH-001</dd></div><div><dt>Đơn vị</dt><dd>Trung tâm điều hành UAV</dd></div><div><dt>Vai trò đang hoạt động</dt><dd>Chỉ huy vận hành</dd></div><div><dt>Email công vụ</dt><dd>chihuy@uav.gov.vn</dd></div></dl>
+        <div className="profile-identity"><span className="avatar large">{account.id === "commander" ? "CH" : account.id === "pilot" ? "PC" : account.id === "response" ? "PU" : "VD"}</span><div><strong>{account.name}</strong><p>{account.role}</p></div></div>
+        <dl className="profile-data"><div><dt>Mã cán bộ</dt><dd>UAV-{account.id.toUpperCase()}</dd></div><div><dt>Đơn vị</dt><dd>Trung tâm điều hành UAV</dd></div><div><dt>Vai trò đang hoạt động</dt><dd>{account.role}</dd></div><div><dt>Email công vụ</dt><dd>{account.username}@uav.gov.vn</dd></div></dl>
       </section>
     </div>}
   </>;
 }
 
-function Sidebar({ pathname, go }) {
+function Sidebar({ pathname, go, account }) {
+  const menu = roleMenus[account.id];
   return <aside className="sidebar">
     <div className="brand"><Icon>shield_person</Icon><div><b>UAV Knowledge</b><small>VIGILANCE &amp; RESPONSE</small></div></div>
-    <button className="create-button" onClick={() => go("/gui-tri-thuc")}>KHỞI TẠO TRI THỨC</button>
-    <nav>{navItems.map(([href, icon, label]) => <button className={pathname === href ? "active" : ""} key={href} onClick={() => go(href)}><Icon>{icon}</Icon>{label}</button>)}</nav>
+    <button className="create-button" onClick={() => go(account.id === "commander" ? "/gui-tri-thuc" : "/nhiem-vu")}>{account.id === "commander" ? "KHỞI TẠO TRI THỨC" : "KHỞI TẠO NHIỆM VỤ"}</button>
+    <nav>{menu.map(([href, icon, label]) => <button className={pathname === href ? "active" : ""} key={href} onClick={() => go(href)}><Icon>{icon}</Icon>{label}</button>)}</nav>
     <div className="sidebar-footer"><button><Icon>settings</Icon>Cài đặt</button><button><Icon>help</Icon>Hỗ trợ</button></div>
   </aside>;
 }
 
-function Header({ onLogout, onSearch }) {
+function Header({ onLogout, onSearch, account }) {
   const [query, setQuery] = useState("");
-  return <header className="app-header"><strong>UAV Knowledge System</strong><form className="search" onSubmit={(event) => { event.preventDefault(); onSearch(query); }}><Icon>search</Icon><input aria-label="Tìm kiếm" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm kiếm tài liệu, SOP..." /><button type="submit" aria-label="Tìm kiếm"><Icon>arrow_forward</Icon></button></form><div className="header-actions"><button aria-label="Thông báo"><Icon>notifications</Icon></button><button className="settings" aria-label="Cài đặt"><Icon>settings</Icon></button><Profile onLogout={onLogout} /></div></header>;
+  return <header className="app-header"><strong>UAV Knowledge System</strong><form className="search" onSubmit={(event) => { event.preventDefault(); onSearch(query); }}><Icon>search</Icon><input aria-label="Tìm kiếm" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm kiếm tài liệu, SOP..." /><button type="submit" aria-label="Tìm kiếm"><Icon>arrow_forward</Icon></button></form><div className="header-actions"><button aria-label="Thông báo"><Icon>notifications</Icon></button><button className="settings" aria-label="Cài đặt"><Icon>settings</Icon></button><Profile onLogout={onLogout} account={account} /></div></header>;
 }
 
 function Card({ icon, title, text, children }) {
@@ -76,6 +91,12 @@ function Dashboard({ go }) {
   </>;
 }
 
+function RoleDashboard({ account, go }) { const copy = account.id === "pilot" ? ["Phi công UAV", "Theo dõi tình trạng tàu bay, chuẩn bị chuyến bay và ghi nhận AAR sau nhiệm vụ.", "flight", "Trạng thái bay", "Sẵn sàng cất cánh"] : account.id === "response" ? ["Đội phản ứng", "Tiếp nhận sự cố, phối hợp hiện trường và tra cứu quy trình phản ứng nhanh.", "emergency", "Sự cố đang theo dõi", "Điểm nóng Khu vực A"] : ["Người vận hành drone", "Quản lý ca vận hành, kiểm tra thiết bị và cập nhật báo cáo chuyến bay.", "settings_input_component", "Drone được phân công", "Drone-02 · Sẵn sàng"]; return <><section className="welcome"><h1>{copy[0]}</h1><p>{copy[1]}</p></section><section className="quick-grid"><button onClick={() => go("/nhiem-vu")}><Card icon="add_task" title="Khởi tạo nhiệm vụ" text="Giao diện lập nhiệm vụ và phân công" /></button><button onClick={() => go("/bao-cao-aar/gui")}><Card icon="description" title="Gửi báo cáo AAR" text="Ghi nhận diễn biến và bài học nhiệm vụ" /></button><button onClick={() => go("/kho-tri-thuc/tong-hop-chien-dich")}><Card icon="menu_book" title="Đọc tài liệu" text="SOP, bài học và tài liệu chuẩn" /></button></section><section className="dashboard-columns"><article className="panel"><div className="panel-title"><h2>{copy[3]}</h2><span className="status-good">Đang hoạt động</span></div><Activity icon={copy[2]} title={copy[4]} meta="Cập nhật theo dữ liệu mô phỏng" /><Activity icon="check_circle" title="Checklist trước nhiệm vụ đã hoàn tất" meta="Sẵn sàng thực hiện bước tiếp theo" /></article><article className="panel"><h2>Quyền vai trò</h2><Status label="Khởi tạo nhiệm vụ" value="Có giao diện" /><Status label="Gửi AAR" value="Được phép" /><Status label="Đọc tài liệu" value="Được phép" /></article></section></>; }
+
+function MissionSetup({ account, go }) { const pageLabel = roleMenus[account.id].find(([href]) => href === "/nhiem-vu")?.[2] || "Khởi tạo nhiệm vụ"; const context = account.id === "pilot" ? "Xác nhận checklist an toàn trước khi nhận nhiệm vụ bay." : account.id === "response" ? "Gửi yêu cầu hỗ trợ UAV cho sự cố được giao; chỉ huy sẽ phê duyệt điều phối." : account.id === "operator" ? "Ghi nhận tình trạng thiết bị, pin và drone trước khi bắt đầu ca vận hành." : "Giao diện mô phỏng lập nhiệm vụ."; return <><section className="page-title"><span>{account.role}</span><h1>{pageLabel}</h1><p>{context}</p></section><section className="form-panel"><div className="form-grid"><label>{account.id === "operator" ? "Drone được kiểm tra" : "Tên nhiệm vụ / sự cố"}<input placeholder={account.id === "response" ? "Sự cố tại khu vực..." : account.id === "operator" ? "Drone-02" : "Tuần tra khu vực..."} /></label><label>{account.id === "operator" ? "Tình trạng pin" : "Drone phụ trách"}<select><option>{account.id === "operator" ? "92% · Đủ điều kiện" : "Drone-01"}</option><option>{account.id === "operator" ? "65% · Cần nạp thêm" : "Drone-02"}</option></select></label></div><label>Khu vực áp dụng<input placeholder="Chọn khu vực hiện trường" /></label><label>{account.id === "operator" ? "Ghi chú ca vận hành" : "Mục tiêu / yêu cầu phối hợp"}<textarea placeholder="Mô tả thông tin cần ghi nhận..." /></label><div className="form-actions"><button className="secondary-button" onClick={() => go(account.home)}>Quay lại</button><button className="primary-button" type="button">Lưu cấu hình mô phỏng</button></div></section></>; }
+
+function AccessDenied({ account, go }) { return <section className="panel empty-state"><Icon>lock</Icon><h2>Không có quyền truy cập</h2><p>Vai trò {account.role} chỉ được truy cập dữ liệu và thao tác nằm trong phạm vi nhiệm vụ được phân công.</p><button className="primary-button" onClick={() => go(account.home)}>Về không gian làm việc</button></section>; }
+
 function Activity({ icon, title, meta }) { return <div className="activity"><span className="activity-icon"><Icon>{icon}</Icon></span><div><strong>{title}</strong><p>{meta}</p></div></div>; }
 function Status({ label, value }) { return <div className="status-row"><span>{label}</span><strong>{value}</strong></div>; }
 
@@ -89,10 +110,11 @@ const initialKnowledgeItems = [
   { id: "checklist", category: "Tài liệu chuẩn", name: "Checklist kiểm tra pin và động cơ trước chuyến bay", type: "Tài liệu chuẩn", tag: "Cập nhật hôm nay" },
 ];
 
-function KnowledgeHome({ terrain, history, items, go }) {
+function KnowledgeHome({ terrain, history, items, go, account = mockAccounts[0] }) {
   const [showArticle, setShowArticle] = useState(false);
-  const title = terrain ? "Hồ sơ không gian thực địa" : history ? "Lịch sử tiến hóa tri thức" : "Tổng hợp tri thức chiến dịch";
-  const subtitle = terrain ? "Bản đồ thông tin vùng bay và điều kiện hiện trường." : history ? "Các phiên bản tri thức được ghi nhận theo thời gian." : "Các bài học, SOP và dữ liệu đã được xác thực từ nhiệm vụ UAV.";
+  const roleKnowledgeLabel = roleMenus[account.id].find(([href]) => href === "/kho-tri-thuc/tong-hop-chien-dich")?.[2] || "Kho tri thức";
+  const title = terrain ? "Hồ sơ không gian thực địa" : history ? "Lịch sử tiến hóa tri thức" : account.id === "commander" ? "Tổng hợp tri thức chiến dịch" : roleKnowledgeLabel;
+  const subtitle = terrain ? "Bản đồ thông tin vùng bay và điều kiện hiện trường." : history ? "Các phiên bản tri thức được ghi nhận theo thời gian." : account.id === "pilot" ? "Tài liệu bay, checklist và bài học đã được phân công cho phi công." : account.id === "response" ? "Quy trình khẩn cấp và bài học phù hợp với các sự cố được giao." : account.id === "operator" ? "Tài liệu kỹ thuật, nhật ký thiết bị và quy trình vận hành drone." : "Các bài học, SOP và dữ liệu đã được xác thực từ nhiệm vụ UAV.";
   return <><section className="page-title"><span>Kho tri thức</span><h1>{title}</h1><p>{subtitle}</p></section>{terrain ? <Terrain /> : history ? <Timeline /> : showArticle ? <SopWindArticle onBack={() => setShowArticle(false)} /> : <KnowledgeList items={items} go={go} onOpenArticle={() => setShowArticle(true)} />}</>;
 }
 
@@ -109,7 +131,7 @@ function Timeline() { const items = ["Cập nhật SOP xử lý mất tín hiệ
 function CommandCenter() { return <><section className="page-title"><span>Vận hành trực tiếp</span><h1>Trung tâm điều hành</h1><p>Theo dõi nhiệm vụ và trạng thái đội bay theo thời gian thực.</p></section><section className="command-layout"><article className="map-panel"><div className="map-toolbar"><strong>Bản đồ nhiệm vụ</strong><span className="live"><i />TRỰC TUYẾN</span></div><div className="map-visual command-map"><i className="drone"><Icon>flight</Icon></i><i className="pin one"><Icon>location_on</Icon></i><i className="pin three"><Icon>location_on</Icon></i></div></article><article className="panel"><h2>Đội bay</h2><Flight name="Drone-01" task="Tuần tra Khu vực A" state="Đang bay" /><Flight name="Drone-02" task="Sẵn sàng cất cánh" state="Sẵn sàng" /><Flight name="Drone-03" task="Bảo dưỡng định kỳ" state="Tạm dừng" /></article></section></>; }
 function Flight({ name, task, state }) { return <div className="flight"><span className="file-icon"><Icon>flight</Icon></span><div><strong>{name}</strong><p>{task}</p></div><span className={state === "Đang bay" ? "tag orange" : "tag"}>{state}</span></div>; }
 
-function KnowledgeSubmit({ onSubmit, go }) { const [saved, setSaved] = useState(false); return <><section className="page-title"><span>Submit Knowledge Form</span><h1>Gửi tri thức mới</h1><p>Tạo SOP, bài học chiến dịch hoặc tài liệu chuẩn để chuyển sang bước phê duyệt.</p></section><form className="form-panel" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); onSubmit({ name: data.get("name"), type: data.get("type"), summary: data.get("summary") }); }}><div className="form-grid"><label>Tiêu đề tri thức<input name="name" required placeholder="Ví dụ: Quy trình ứng phó mất tín hiệu GPS" /></label><label>Loại nội dung<select name="type" defaultValue="Bài học chiến dịch"><option>SOP / Quy trình vận hành</option><option>Bài học chiến dịch</option><option>Tài liệu chuẩn</option><option>Dữ liệu cảm biến</option></select></label></div><label>Ngữ cảnh nhiệm vụ<input name="mission" placeholder="Mã nhiệm vụ hoặc khu vực áp dụng" /></label><label>Nội dung và bằng chứng<textarea name="summary" required placeholder="Mô tả tình huống, cách xử lý, bài học rút ra và các tài liệu/bằng chứng liên quan..." /></label><div className="form-actions"><button type="button" className="secondary-button" onClick={() => { setSaved(true); }}>Lưu bản nháp</button><button className="primary-button">Gửi phê duyệt</button></div>{saved && <p className="form-success"><Icon>check_circle</Icon>Đã lưu bản nháp trong phiên làm việc.</p>}</form></>; }
+function KnowledgeSubmit({ onSubmit, go, account = mockAccounts[0] }) { const [saved, setSaved] = useState(false); const submitLabel = roleMenus[account.id].find(([href]) => href === "/bao-cao-aar/gui")?.[2] || "Gửi tri thức mới"; const helper = account.id === "pilot" ? "Ghi AAR chuyến bay và bài học từ nhiệm vụ được phân công." : account.id === "response" ? "Ghi AAR hiện trường, diễn biến sự cố và nhu cầu phản ứng tiếp theo." : account.id === "operator" ? "Ghi AAR kỹ thuật về thiết bị, pin và ca vận hành drone." : "Tạo SOP, bài học chiến dịch hoặc tài liệu chuẩn để chuyển sang bước phê duyệt."; return <><section className="page-title"><span>{account.role}</span><h1>{submitLabel}</h1><p>{helper}</p></section><form className="form-panel" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); onSubmit({ name: data.get("name"), type: data.get("type"), summary: data.get("summary") }); }}><div className="form-grid"><label>Tiêu đề AAR / tri thức<input name="name" required placeholder="Ví dụ: Bài học xử lý mất tín hiệu GPS" /></label><label>Loại nội dung<select name="type" defaultValue="Bài học chiến dịch"><option>SOP / Quy trình vận hành</option><option>Bài học chiến dịch</option><option>Tài liệu chuẩn</option><option>Dữ liệu cảm biến</option></select></label></div><label>Nhiệm vụ hoặc sự cố được giao<input name="mission" placeholder="Mã nhiệm vụ, drone hoặc khu vực áp dụng" /></label><label>Nội dung và bằng chứng<textarea name="summary" required placeholder="Mô tả diễn biến, cách xử lý, bài học rút ra và bằng chứng liên quan..." /></label><div className="form-actions"><button type="button" className="secondary-button" onClick={() => { setSaved(true); }}>Lưu bản nháp</button><button className="primary-button">Gửi phê duyệt</button></div>{saved && <p className="form-success"><Icon>check_circle</Icon>Đã lưu bản nháp trong phiên làm việc.</p>}</form></>; }
 
 function AarReview({ summary, pendingItems, onReview }) { const title = summary ? "Tổng kết chiến dịch" : "Duyệt tri thức"; return <><section className="page-title"><span>Review &amp; Approval</span><h1>{title}</h1><p>{summary ? "Chỉ số hiệu quả và các đề xuất cải tiến sau chiến dịch." : "Đánh giá nội dung trước khi công bố vào kho tri thức."}</p></section>{summary ? <Summary /> : <ReviewList pendingItems={pendingItems} onReview={onReview} />}</>; }
 function ReviewList({ pendingItems, onReview }) { return <section className="content-grid"><article className="panel wide"><div className="panel-title"><h2>Tri thức chờ duyệt</h2><span className="tag orange">{pendingItems.length} mục chờ duyệt</span></div>{pendingItems.length === 0 ? <div className="review-empty"><Icon>task_alt</Icon><strong>Không còn mục nào chờ duyệt</strong><p>Các nội dung đã được xử lý sẽ phản ánh ngay vào Kho tri thức và KPI.</p></div> : pendingItems.map((item) => <div className="review-item" key={item.id}><div><strong>{item.name}</strong><p>{item.type} · Người gửi: Chỉ huy vận hành · Hôm nay</p></div><div><button className="secondary-button" onClick={() => onReview(item.id, "Từ chối")}>Từ chối</button><button className="primary-button" onClick={() => onReview(item.id, "Đã xác thực")}>Duyệt</button></div></div>)}</article><article className="panel"><h2>Tiêu chí phê duyệt</h2><p className="muted">Kiểm tra thông tin nhiệm vụ, bằng chứng và khả năng tái sử dụng của nội dung.</p><Status label="Đủ thông tin" value="Bắt buộc" /><Status label="Có bằng chứng" value="Khuyến nghị" /></article></section>; }
@@ -123,33 +145,40 @@ function Sop() { return <><section className="page-title"><span>Quản trị tà
 
 function GenericPage({ pathname }) { const [title, subtitle] = screenInfo[pathname] || screenInfo["/kho-tri-thuc/tong-hop-chien-dich"]; return <><section className="page-title"><span>UAV Knowledge</span><h1>{title}</h1><p>{subtitle}</p></section><section className="panel empty-state"><Icon>construction</Icon><h2>Không gian làm việc đang được chuẩn bị</h2><p>Nội dung sẽ được đồng bộ theo thiết kế của hệ thống.</p></section></>; }
 
-function Login({ go }) { const [showPassword, setShowPassword] = useState(false); return <main className="login-page"><section className="login-hero"><div><span className="hero-icon"><Icon>flight_takeoff</Icon></span><h1>Hệ thống Quản trị Tri thức UAV</h1><p>Chi cục Kiểm lâm Tỉnh Quảng Ninh</p></div></section><section className="login-section"><form className="login-form" onSubmit={(event) => { event.preventDefault(); go("/"); }}><div className="login-heading"><h1>Đăng nhập hệ thống</h1><p>Vui lòng nhập thông tin để truy cập không gian làm việc.</p></div><label>Tên đăng nhập hoặc Mã số cán bộ<div className="input-icon"><Icon>person</Icon><input required placeholder="Nhập tên đăng nhập" /></div></label><label>Mật khẩu<div className="input-icon"><Icon>lock</Icon><input required type={showPassword ? "text" : "password"} placeholder="••••••••" /><button type="button" onClick={() => setShowPassword(!showPassword)}><Icon>{showPassword ? "visibility_off" : "visibility"}</Icon></button></div></label><div className="login-options"><label><input type="checkbox" /> Ghi nhớ đăng nhập</label><a href="#">Quên mật khẩu?</a></div><button className="login-button">ĐĂNG NHẬP</button><div className="or"><span />HOẶC<span /></div><button type="button" className="sso-button"><Icon>admin_panel_settings</Icon>ĐĂNG NHẬP BẰNG TÀI KHOẢN CỔNG DỊCH VỤ CÔNG SSO</button></form></section></main>; }
+function RoleLogin({ onLogin }) { const [selected, setSelected] = useState(mockAccounts[0].id); const [error, setError] = useState(""); const account = mockAccounts.find((item) => item.id === selected); return <main className="login-page"><section className="login-hero"><div><span className="hero-icon"><Icon>flight_takeoff</Icon></span><h1>Hệ thống Quản trị Tri thức UAV</h1><p>Đăng nhập mô phỏng theo vai trò</p></div></section><section className="login-section"><form className="login-form" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); if (data.get("username") === account.username && data.get("password") === account.password) onLogin(account); else setError("Sai thông tin đăng nhập mẫu. Hãy dùng tài khoản được gợi ý."); }}><div className="login-heading"><h1>Đăng nhập hệ thống</h1><p>Chọn vai trò để truy cập trang làm việc riêng.</p></div><label>Vai trò tài khoản<select value={selected} onChange={(event) => { setSelected(event.target.value); setError(""); }}><option value="commander">Chỉ huy vận hành</option><option value="pilot">Phi công UAV</option><option value="response">Đội phản ứng</option><option value="operator">Người vận hành drone</option></select></label><label>Tên đăng nhập<div className="input-icon"><Icon>person</Icon><input name="username" defaultValue={account.username} key={`${selected}-user`} required /></div></label><label>Mật khẩu<div className="input-icon"><Icon>lock</Icon><input name="password" defaultValue="123456" type="password" required /></div></label><p className="mock-login">Tài khoản mẫu: <b>{account.username}</b> · Mật khẩu: <b>123456</b></p>{error && <p className="login-error">{error}</p>}<button className="login-button">ĐĂNG NHẬP VỚI VAI TRÒ NÀY</button></form></section></main>; }
 
 export default function Application() {
   const pathname = usePathname();
   const router = useRouter();
   const [items, setItems] = useState(initialKnowledgeItems);
   const [searchQuery, setSearchQuery] = useState("");
+  const [account, setAccount] = useState(mockAccounts[0]);
   useEffect(() => { try { const savedItems = window.localStorage.getItem("kms-knowledge-items"); if (savedItems) { const parsedItems = JSON.parse(savedItems); const savedById = new Map(parsedItems.map((item) => [item.id, item])); const initialIds = new Set(initialKnowledgeItems.map((item) => item.id)); setItems([...initialKnowledgeItems.map((item) => savedById.get(item.id) || item), ...parsedItems.filter((item) => !initialIds.has(item.id))]); } } catch {} }, []);
   useEffect(() => { try { window.localStorage.setItem("kms-knowledge-items", JSON.stringify(items)); } catch {} }, [items]);
+  useEffect(() => { try { const savedAccount = window.localStorage.getItem("kms-active-account"); if (savedAccount) setAccount(JSON.parse(savedAccount)); } catch {} }, []);
   const go = (href) => router.push(href);
-  if (pathname === "/dang-nhap") return <Login go={go} />;
-  const logout = () => { try { window.localStorage.removeItem("kms-active-role"); } catch {} go("/dang-nhap"); };
+  if (pathname === "/dang-nhap") return <RoleLogin onLogin={(nextAccount) => { setAccount(nextAccount); try { window.localStorage.setItem("kms-active-account", JSON.stringify(nextAccount)); } catch {} go(nextAccount.home); }} />;
+  const logout = () => { try { window.localStorage.removeItem("kms-active-role"); window.localStorage.removeItem("kms-active-account"); } catch {} go("/dang-nhap"); };
   const submitKnowledge = ({ name, type, summary }) => { const category = type.includes("SOP") ? "SOP" : type.includes("Dữ liệu") ? "Dữ liệu cảm biến" : type.includes("Bài học") ? "Bài học" : "Tài liệu chuẩn"; setItems((current) => [{ id: `knowledge-${Date.now()}`, category, name, type, summary, tag: "Chờ phê duyệt" }, ...current]); go("/duyet-bai"); };
   const reviewKnowledge = (id, decision) => setItems((current) => current.map((item) => item.id === id ? { ...item, tag: decision } : item));
   const runSearch = (query) => { setSearchQuery(query); go("/tim-kiem"); };
   const pendingItems = items.filter((item) => item.tag === "Chờ phê duyệt");
   let page = <GenericPage pathname={pathname} />;
   if (pathname === "/") page = <Dashboard go={go} />;
+  if (pathname === "/phi-cong-uav" || pathname === "/doi-phan-ung" || pathname === "/van-hanh-drone") page = <RoleDashboard account={pathname === "/phi-cong-uav" ? mockAccounts[1] : pathname === "/doi-phan-ung" ? mockAccounts[2] : mockAccounts[3]} go={go} />;
+  if (pathname === "/nhiem-vu") page = <MissionSetup account={account} go={go} />;
   if (pathname === "/dieu-hanh") page = <CommandCenter />;
-  if (pathname === "/kho-tri-thuc/tong-hop-chien-dich") page = <KnowledgeHome items={items} go={go} />;
-  if (pathname === "/kho-tri-thuc/ho-so-khong-gian") page = <KnowledgeHome terrain items={items} go={go} />;
-  if (pathname === "/kho-tri-thuc/lich-su-tien-hoa") page = <KnowledgeHome history items={items} go={go} />;
-  if (pathname === "/bao-cao-aar/gui" || pathname === "/gui-tri-thuc") page = <KnowledgeSubmit onSubmit={submitKnowledge} go={go} />;
+  if (pathname === "/kho-tri-thuc/tong-hop-chien-dich") page = <KnowledgeHome items={items} go={go} account={account} />;
+  if (pathname === "/kho-tri-thuc/ho-so-khong-gian") page = <KnowledgeHome terrain items={items} go={go} account={account} />;
+  if (pathname === "/kho-tri-thuc/lich-su-tien-hoa") page = <KnowledgeHome history items={items} go={go} account={account} />;
+  if (pathname === "/bao-cao-aar/gui" || pathname === "/gui-tri-thuc") page = <KnowledgeSubmit onSubmit={submitKnowledge} go={go} account={account} />;
   if (pathname === "/bao-cao-aar" || pathname === "/duyet-bai") page = <AarReview pendingItems={pendingItems} onReview={reviewKnowledge} />;
   if (pathname === "/bao-cao-aar/tong-ket") page = <AarReview summary />;
   if (pathname === "/thong-ke") page = <Analytics items={items} />;
   if (pathname === "/tim-kiem") page = <SearchResults query={searchQuery} items={items} go={go} />;
   if (pathname === "/phan-phoi-sop") page = <Sop />;
-  return <div className="app-shell"><Sidebar pathname={pathname} go={go} /><div className="app-main"><Header onLogout={logout} onSearch={runSearch} /><main className="page-content">{page}</main></div></div>;
+  const restrictedForFieldRoles = ["/", "/duyet-bai", "/thong-ke", "/bao-cao-aar/tong-ket", "/phan-phoi-sop"];
+  const otherRoleHomes = ["/phi-cong-uav", "/doi-phan-ung", "/van-hanh-drone"].filter((href) => href !== account.home);
+  if (account.id !== "commander" && (restrictedForFieldRoles.includes(pathname) || otherRoleHomes.includes(pathname))) page = <AccessDenied account={account} go={go} />;
+  return <div className="app-shell"><Sidebar pathname={pathname} go={go} account={account} /><div className="app-main"><Header onLogout={logout} onSearch={runSearch} account={account} /><main className="page-content">{page}</main></div></div>;
 }
