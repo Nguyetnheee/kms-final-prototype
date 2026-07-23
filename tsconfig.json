@@ -30,12 +30,9 @@
     ]
   },
   "include": [
-    "**/*.js",
-    ".next-kms-prod/types/**/*.ts",
-    ".next-kms/types/**/*.ts",
-    ".next/types/**/*.ts",
     "next-env.d.ts",
-    ".next-kms-dev/types/**/*.ts"
+    "**/*.js",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
